@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Top Products</title>
+<meta name="rev" content="1793141307121">
+<meta name="repo" content="dwightrfm/rise-top-products">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200..900&amp;family=Instrument+Serif:ital@0;1&amp;family=JetBrains+Mono:wght@300..700&amp;display=swap" rel="stylesheet">
+<style>
+:root{
+  --ease:cubic-bezier(.16,1,.3,1);--spring:cubic-bezier(.34,1.56,.64,1);--soft:cubic-bezier(.45,0,.2,1);
+  --sans:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Inter","Helvetica Neue",Arial,sans-serif;
+  --serif:"Instrument Serif","New York",Georgia,serif;
+  --mono:"JetBrains Mono","SF Mono",ui-monospace,Menlo,monospace;
+  --ink:#f4f8f9;--mut:rgba(228,240,243,.62);--dim:rgba(228,240,243,.38);
+  --teal:#46d9d2;--gold:#ffc46b;--brand:#33707f;
+  --pp:0%;
+  --acc:color-mix(in oklab,var(--teal),var(--gold) var(--pp));
+  --acc2:color-mix(in oklab,#2a9fd6,#ff8a5b var(--pp));
+  --mx:0;--my:0;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#03070b;color:var(--ink);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+canvas#bg{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block}
+canvas#motes{position:fixed;inset:0;width:100vw;height:100vh;z-index:1;pointer-events:none}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;z-index:2;perspective:2400px;perspective-origin:50% 50%}
+.slide{position:absolute;inset:0;opacity:0;visibility:hidden;transform:translateZ(-760px);filter:blur(22px);perspective:1600px;
+  transition:opacity .9s var(--ease),transform 1.4s var(--ease),filter 1s var(--ease),visibility 0s linear 1.4s}
+.slide.active{opacity:1;visibility:visible;transform:none;filter:none;transition:opacity 1s var(--ease) .12s,transform 1.5s var(--ease) .05s,filter 1.1s var(--ease) .1s,visibility 0s}
+.slide.leaving{opacity:0;visibility:visible;transform:translateZ(520px);filter:blur(26px);transition:opacity .75s var(--ease),transform 1.2s var(--ease),filter .9s var(--ease),visibility 0s linear 1.2s}
+#stage.back .slide:not(.active):not(.leaving){transform:translateZ(520px)}
+#stage.back .slide.leaving{transform:translateZ(-760px)}
+#stage.static .slide{transition:none!important}
+#stage.static .a,#stage.static .ch,#stage.static .draw{animation:none!important;opacity:1!important}
+#stage.static .draw{stroke-dashoffset:0!important}
+#stage.static .s-close .photo{opacity:1;transform:none}
+
+/* entrance system */
+.a{opacity:0}
+.active .a,.leaving .a{animation-name:var(--k,rise);animation-duration:var(--t,1.4s);animation-timing-function:var(--e,var(--ease));animation-delay:var(--d,0s);animation-fill-mode:both}
+@keyframes rise{from{opacity:0;transform:translateY(70px);filter:blur(16px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes riseFar{from{opacity:0;transform:translateY(240px) scale(.94);filter:blur(24px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes depth{from{opacity:0;transform:translateZ(-420px) rotateX(18deg);filter:blur(20px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes bloom{0%{opacity:0;transform:scale(.4);filter:blur(30px) brightness(3)}60%{opacity:1;filter:blur(0) brightness(1.4)}100%{opacity:1;transform:none;filter:none}}
+@keyframes left{from{opacity:0;transform:translateX(-120px);filter:blur(14px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes right{from{opacity:0;transform:translateX(120px);filter:blur(14px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes pop{0%{opacity:0;transform:scale(.5)}60%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes flipUp{from{opacity:0;transform:perspective(1200px) rotateX(-75deg) translateY(80px);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
+@keyframes track{from{opacity:0;letter-spacing:1em;filter:blur(12px)}to{opacity:1;filter:blur(0)}}
+
+/* split headline letters */
+.split .w{display:inline-block;white-space:nowrap;perspective:900px}
+.split .ch{display:inline-block;opacity:0;transform-origin:50% 100%}
+.active .split .ch,.leaving .split .ch{animation:chIn 1.25s var(--ease) both;animation-delay:calc(var(--d,0s) + var(--i)*32ms)}
+@keyframes chIn{from{opacity:0;transform:translateY(.5em) rotateX(-85deg);filter:blur(14px)}to{opacity:1;transform:none;filter:blur(0)}}
+.split{font-kerning:none}
+
+/* type */
+.mono{font-family:var(--mono);font-weight:500;text-transform:uppercase;letter-spacing:.32em;font-size:19px}
+.eyebrow{font-family:var(--mono);font-weight:500;text-transform:uppercase;letter-spacing:.34em;font-size:19px;color:var(--acc);display:flex;align-items:center;gap:18px}
+.eyebrow::before{content:"";width:46px;height:1px;background:linear-gradient(90deg,transparent,var(--acc));box-shadow:0 0 12px var(--acc)}
+.eyebrow.c::after{content:"";width:46px;height:1px;background:linear-gradient(270deg,transparent,var(--acc));box-shadow:0 0 12px var(--acc)}
+.mega{font-size:236px;font-weight:700;letter-spacing:-.055em;line-height:.9;margin:0}
+.h1{font-size:118px;font-weight:700;letter-spacing:-.045em;line-height:.96;margin:0}
+.h2{font-size:58px;font-weight:650;letter-spacing:-.03em;line-height:1.02;margin:0}
+.h3{font-size:38px;font-weight:600;letter-spacing:-.02em;line-height:1.1;margin:0}
+.lede{font-size:40px;font-weight:350;letter-spacing:-.012em;color:var(--mut);line-height:1.3;margin:0}
+.body{font-size:30px;font-weight:400;color:var(--mut);line-height:1.38;margin:0}
+em,.serif{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:-.01em}
+h1 em,.mega em,.h1 em{color:var(--acc);text-shadow:0 0 50px color-mix(in srgb,var(--acc) 45%,transparent)}
+.grad{background:linear-gradient(100deg,#fff 0%,var(--acc) 25%,#fff 50%,var(--acc) 75%,#fff 100%);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 9s linear infinite}
+@keyframes shimmer{to{background-position:300% 0}}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+/* liquid glass */
+.glass{position:relative;border-radius:38px;background:linear-gradient(155deg,rgba(255,255,255,.14),rgba(255,255,255,.04) 55%,rgba(255,255,255,.07));
+  -webkit-backdrop-filter:blur(30px) saturate(185%);backdrop-filter:blur(30px) saturate(185%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.38),inset 0 -1px 0 rgba(255,255,255,.07),inset 0 0 0 1px rgba(255,255,255,.07),0 50px 110px -40px rgba(0,0,0,.75);overflow:hidden;isolation:isolate}
+.glass::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;pointer-events:none;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--acc) 85%,transparent),rgba(255,255,255,.08) 30%,transparent 55%,color-mix(in srgb,var(--acc2) 60%,transparent));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.75}
+.glass::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;
+  background:radial-gradient(520px circle at var(--gx,30%) var(--gy,-20%),rgba(255,255,255,.17),transparent 45%)}
+.chip{display:inline-flex;align-items:center;gap:12px;padding:12px 24px;border-radius:999px;font-size:22px;font-weight:600;letter-spacing:.01em;
+  background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16),inset 0 1px 0 rgba(255,255,255,.25);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+.chip.acc{background:color-mix(in srgb,var(--acc) 22%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 60%,transparent);color:#fff}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 14px var(--acc),0 0 30px var(--acc)}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.6);opacity:.55}}
+.depth{translate:calc(var(--mx)*var(--z,10)*1px) calc(var(--my)*var(--z,10)*1px)}
+.float{animation:floaty 8s ease-in-out infinite}
+@keyframes floaty{0%,100%{translate:0 0}50%{translate:0 -16px}}
+.draw{stroke-dasharray:1;stroke-dashoffset:1}
+.active .draw,.leaving .draw{animation:draw 2s var(--ease) both;animation-delay:var(--d,0s)}
+@keyframes draw{to{stroke-dashoffset:0}}
+.logo-tile{display:flex;align-items:center;justify-content:center;background:#fff;border-radius:18px;padding:10px 16px;box-shadow:0 18px 40px -18px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.6)}
+.logo-tile img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.logo-tile.dark{background:#0b0b0b}
+
+/* rise logo */
+.rise-logo svg{width:100%;height:100%;display:block;overflow:visible}
+.rise-logo .rays{transform-origin:100px 122px;transform-box:view-box}
+.active .rise-logo .rays{animation:raysIn 2.4s var(--ease) both,raysBreath 7s ease-in-out 2.4s infinite}
+@keyframes raysIn{from{transform:rotate(-80deg) scale(.3);opacity:0}to{transform:none;opacity:1}}
+@keyframes raysBreath{0%,100%{transform:rotate(0)}50%{transform:rotate(3deg)}}
+
+/* layout helpers */
+.center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.pad{position:absolute;inset:120px 130px 110px}
+.row{display:flex;gap:32px}
+.col{display:flex;flex-direction:column}
+
+/* HUD */
+#hud{position:fixed;inset:0;z-index:20;pointer-events:none;transition:opacity .8s var(--ease)}
+body.idle #hud{opacity:0}
+#hud .tl{position:absolute;left:34px;top:28px;display:flex;align-items:center;gap:14px;color:rgba(255,255,255,.8)}
+#hud .tl .rise-logo{width:34px;height:34px;filter:drop-shadow(0 0 12px rgba(70,217,210,.55))}
+#hud .tl span{font-family:var(--mono);font-size:12px;letter-spacing:.34em;text-transform:uppercase}
+#hud .tr{position:absolute;right:36px;top:32px;font-family:var(--mono);font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.75);display:flex;gap:18px;align-items:center}
+#hud .tr b{color:var(--acc);font-weight:600}
+#prog{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);display:flex;gap:6px;pointer-events:auto}
+#prog i{display:block;width:30px;height:4px;border-radius:4px;background:rgba(255,255,255,.18);cursor:pointer;transition:all .6s var(--ease);position:relative;overflow:hidden}
+#prog i.on{background:rgba(255,255,255,.45)}
+#prog i.cur{width:64px;background:var(--acc);box-shadow:0 0 14px var(--acc)}
+#prog i:hover{background:rgba(255,255,255,.7)}
+#help{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:rgba(2,6,10,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);opacity:0;pointer-events:none;transition:opacity .4s var(--ease)}
+#help.show{opacity:1;pointer-events:auto}
+#help .glass{padding:44px 54px;min-width:560px}
+#help h3{margin:0 0 22px;font-size:30px;letter-spacing:-.02em}
+#help table{border-collapse:collapse;font-size:18px}
+#help td{padding:9px 18px 9px 0;color:var(--mut)}
+#help td:first-child{font-family:var(--mono);color:#fff;font-size:15px;letter-spacing:.08em}
+#toast{position:fixed;left:50%;top:26px;transform:translate(-50%,-20px);z-index:45;opacity:0;transition:all .5s var(--ease);font-family:var(--mono);font-size:13px;letter-spacing:.2em;text-transform:uppercase;padding:12px 22px;border-radius:999px;background:rgba(10,20,26,.7);box-shadow:inset 0 0 0 1px rgba(255,255,255,.2);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+body.editing [contenteditable]{outline:1px dashed rgba(255,255,255,.35);outline-offset:6px;border-radius:6px;cursor:text}
+body.editing [contenteditable]:focus{outline:2px solid var(--acc)}
+
+/* overview */
+body.overview #stage{perspective:none}
+body.overview .slide{visibility:visible!important;opacity:1!important;filter:none!important;cursor:pointer;
+  transform:translate(var(--ox),var(--oy)) scale(.1667)!important;transform-origin:0 0;transition:transform .9s var(--ease),opacity .5s!important;border-radius:60px;outline:6px solid rgba(255,255,255,.12);background:rgba(4,10,16,.55)}
+body.overview .slide.cur{outline:10px solid var(--acc)}
+body.overview .slide:hover{outline-color:rgba(255,255,255,.6)}
+body.overview .glass,body.overview .chip{-webkit-backdrop-filter:none;backdrop-filter:none}
+body.overview .slide *{pointer-events:none}
+
+
+/* QR frames */
+.qr{position:relative;background:#fff;border-radius:22px;padding:14px;box-shadow:0 0 0 1px rgba(255,255,255,.6),0 0 60px -10px var(--acc)}
+.qr img{display:block;width:100%;image-rendering:pixelated}
+.qr .scan{position:absolute;left:8px;right:8px;height:3px;top:10%;background:var(--acc);box-shadow:0 0 18px 4px var(--acc);border-radius:3px;animation:scan 3.2s var(--soft) infinite;opacity:.9}
+@keyframes scan{0%,100%{top:8%}50%{top:90%}}
+.qr .cn{position:absolute;width:34px;height:34px;border:4px solid var(--acc);filter:drop-shadow(0 0 6px var(--acc))}
+.qr .cn.a1{left:-14px;top:-14px;border-right:0;border-bottom:0;border-radius:14px 0 0 0}
+.qr .cn.a2{right:-14px;top:-14px;border-left:0;border-bottom:0;border-radius:0 14px 0 0}
+.qr .cn.a3{left:-14px;bottom:-14px;border-right:0;border-top:0;border-radius:0 0 0 14px}
+.qr .cn.a4{right:-14px;bottom:-14px;border-left:0;border-top:0;border-radius:0 0 14px 0}
+
+@media (prefers-reduced-motion:reduce){.float,.pulse,.qr .scan{animation:none!important}}
+
+/* touch buttons + phone hints */
+#tbtn{position:absolute;right:22px;bottom:14px;display:flex;gap:8px;pointer-events:auto}
+#tbtn button{width:40px;height:40px;border-radius:12px;border:0;cursor:pointer;color:#fff;font-size:18px;line-height:1;background:rgba(10,20,26,.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+#tbtn button:hover{background:rgba(255,255,255,.18)}
+#rot{display:none}
+@media (orientation:portrait) and (max-width:820px){
+  #rot{display:flex;position:fixed;left:16px;right:16px;bottom:72px;z-index:30;justify-content:center;align-items:center;gap:10px;padding:12px 16px;border-radius:999px;font:600 14px/1.2 var(--sans);color:#fff;background:rgba(10,20,26,.7);box-shadow:inset 0 0 0 1px rgba(255,255,255,.2);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);pointer-events:none;animation:rotHint 7s var(--ease) 1s both}
+  #prog i{width:14px}#prog i.cur{width:30px}
+  #hud .tl span{display:none}
+}
+@keyframes rotHint{0%{opacity:0;transform:translateY(20px)}10%,80%{opacity:1;transform:none}100%{opacity:0}}
+body.editing #rot{display:none}
+
+:root{--teal:#5fe3c4;--gold:#ffc062;--acc2:color-mix(in oklab,#4f7dff,#ff8a5c var(--pp));}
+/* ============ DECK ============ */
+/* shared bits for this deck */
+.head{position:absolute;left:130px;top:110px}
+.head .h1{margin-top:20px}
+.ic{stroke:var(--acc);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 12px color-mix(in srgb,var(--acc) 55%,transparent))}
+.gradnum{color:transparent;background:linear-gradient(180deg,#fff 10%,var(--acc) 70%);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 0 30px color-mix(in srgb,var(--acc) 35%,transparent))}
+.lab{font-family:var(--mono);font-size:16px;letter-spacing:.3em;color:var(--acc);text-transform:uppercase}
+a.url{display:block;font-family:var(--mono);font-size:19px;letter-spacing:.04em;color:var(--mut);text-decoration:none;margin-top:12px;pointer-events:auto;word-break:break-all}
+a.url::before{content:"↗ ";color:var(--acc)}
+a.url:hover{color:#fff}
+.car .n,.card .n,.big .n,.side .n{font-family:var(--mono);font-size:17px;letter-spacing:.3em;color:var(--acc);text-transform:uppercase}
+.nm{font-size:44px;font-weight:700;letter-spacing:-.03em;line-height:1.06}
+.ph{font-family:var(--mono);font-size:26px;letter-spacing:.06em;color:#fff;margin-top:14px}
+.sm{font-size:28px;color:var(--mut);margin-top:14px;line-height:1.3}
+.sm b{color:#fff;font-weight:600}
+.cars{position:absolute;left:130px;right:130px;display:grid;gap:30px}
+.car{padding:36px 40px;border-radius:32px;display:flex;flex-direction:column;justify-content:flex-end}
+.car .nm{margin-top:auto}
+@keyframes pipOn{from{opacity:.15;r:6}to{opacity:1;r:9}}
+
+/* 1 title: a ring of 12 lights, one per product line */
+.s-title .shelf{width:300px;height:300px;position:relative;margin-bottom:34px}
+.s-title .shelf .halo{position:absolute;inset:-150px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--acc) 42%,transparent),transparent 62%);filter:blur(10px);animation:breathe 5s ease-in-out infinite}
+.s-title .shelf svg.pips{position:absolute;inset:-40px;width:380px;height:380px;overflow:visible}
+.s-title .shelf .ring{fill:none;stroke:rgba(255,255,255,.1);stroke-width:2;stroke-dasharray:3 9}
+.s-title .shelf .pip{fill:var(--acc);opacity:.15;filter:drop-shadow(0 0 10px var(--acc))}
+.s-title.active .shelf .pip{animation:pipOn .6s var(--ease) both;animation-delay:calc(1.2s + var(--i)*.14s)}
+.s-title .shelf .rise-logo{position:absolute;inset:50px}
+.s-title .q{font-size:64px;font-weight:600;letter-spacing:-.03em;line-height:1.05;margin:22px 0 0}
+.s-title .mega{position:relative;margin-top:8px}
+.s-title .lede{margin-top:30px}
+.s-title .meta{position:absolute;bottom:92px;left:0;right:0;display:flex;justify-content:center;gap:16px}
+@keyframes breathe{0%,100%{opacity:.55;transform:scale(.94)}50%{opacity:1;transform:scale(1.06)}}
+
+/* 2 disclaimer */
+.s-disc .list{position:absolute;left:130px;right:130px;top:400px;display:flex;flex-direction:column;gap:20px}
+.s-disc .it{min-height:100px;border-radius:28px;padding:20px 36px;display:flex;align-items:center;gap:30px}
+.s-disc .it svg.ic{width:62px;height:62px;flex:none}
+.s-disc .it .t{font-size:38px;font-weight:500;letter-spacing:-.015em;line-height:1.2}
+.s-disc .it .t b{font-weight:700}
+.s-disc .it.tall .t span{display:block;font-size:27px;color:var(--mut);font-weight:400;margin-top:8px;line-height:1.3}
+
+/* 3 the shelf map */
+.s-map .grid12{position:absolute;left:130px;right:130px;top:400px;bottom:110px;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);gap:22px}
+.s-map .cell{border-radius:28px;padding:24px 30px;display:flex;flex-direction:column}
+.s-map .cell .n{font-family:var(--mono);font-weight:700;font-size:22px;color:var(--acc)}
+.s-map .cell .t{font-size:36px;font-weight:650;letter-spacing:-.02em;line-height:1.08;margin-top:auto}
+.s-map .cell .k{font-family:var(--mono);font-size:14px;letter-spacing:.26em;text-transform:uppercase;color:var(--mut);margin-top:10px}
+
+/* 4 pure life */
+.s-pure .ills{position:absolute;left:130px;right:130px;top:390px;height:220px;display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
+.s-pure .ill{border-radius:32px;padding:30px 40px;display:flex;align-items:center;gap:32px}
+.s-pure .ill svg.ic{width:100px;height:100px;flex:none}
+.s-pure .ill .t{font-size:46px;font-weight:700;letter-spacing:-.03em;line-height:1.05}
+.s-pure .lab{position:absolute;left:130px;top:660px}
+.s-pure .cars.two{top:705px;bottom:110px;grid-template-columns:1fr 1fr}
+
+/* 5 final expense */
+.s-duo .cols{position:absolute;left:130px;right:130px;top:400px;bottom:110px;display:grid;grid-template-columns:1fr 1fr;gap:34px}
+.s-duo .big{padding:44px 50px;border-radius:36px;display:flex;flex-direction:column}
+.s-duo .big svg.ic{width:120px;height:120px;margin-top:34px}
+.s-duo .big .nm{font-size:60px;margin-top:auto}
+
+/* 6 IULs */
+.s-iul svg.climb{position:absolute;left:130px;top:330px;width:1660px;height:260px;overflow:visible}
+.s-iul .climb .base{stroke:rgba(255,255,255,.12);stroke-width:2;fill:none;stroke-dasharray:4 10}
+.s-iul .climb .lit{stroke:var(--acc);stroke-width:4;fill:none;filter:drop-shadow(0 0 12px var(--acc))}
+.s-iul .cars.three{top:600px;bottom:110px;grid-template-columns:repeat(3,1fr)}
+.s-iul .car .nm{font-size:42px}
+
+/* 7 life + LTC compare */
+.s-vs .vs{position:absolute;left:130px;right:130px;top:400px;bottom:110px;display:grid;grid-template-columns:1fr 120px 1fr;gap:20px;align-items:stretch}
+.s-vs .side{padding:42px 48px;border-radius:36px;display:flex;flex-direction:column}
+.s-vs .side .nm{font-size:54px;margin-top:10px}
+.s-vs .pcts{display:flex;gap:34px;margin:auto 0 26px;font-size:120px;font-weight:800;letter-spacing:-.05em;line-height:.9}
+.s-vs .r{display:flex;align-items:center;gap:20px;font-size:30px;line-height:1.3;margin-top:12px;color:var(--mut)}
+.s-vs .r b{color:#fff;font-weight:700}
+.s-vs .r .dot{flex:none}
+.s-vs .mid{align-self:center;justify-self:center;width:100px;height:100px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-style:italic;font-size:48px;color:var(--acc);box-shadow:0 0 0 2px var(--acc),0 0 40px -6px var(--acc)}
+
+/* 8 linked benefit */
+.s-link .left{position:absolute;left:130px;top:110px;width:1000px}
+.s-link .rules{margin-top:56px;display:flex;flex-direction:column;gap:26px}
+.s-link .rules .r{display:flex;gap:24px;align-items:center;font-size:36px;line-height:1.25;color:var(--mut)}
+.s-link .rules .r b{color:#fff;font-weight:650}
+.s-link .rules .dot{flex:none}
+.s-link .scale{position:absolute;right:220px;top:130px;width:520px;height:560px;display:flex;gap:70px;align-items:flex-end;justify-content:center}
+.s-link .bar{width:170px;height:100%;position:relative;border-radius:30px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.s-link .bar .fill{position:absolute;left:0;right:0;bottom:0;height:var(--h);border-radius:30px;transform-origin:bottom}
+.s-link .bar.db .fill{background:linear-gradient(0deg,rgba(255,255,255,.12),rgba(255,255,255,.3))}
+.s-link .bar.care .fill{background:linear-gradient(0deg,color-mix(in srgb,var(--acc2) 70%,transparent),var(--acc));box-shadow:0 0 60px -6px var(--acc)}
+.s-link.active .bar .fill{animation:grow 1.8s var(--ease) 1s both}
+@keyframes grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+.s-link .bar .cap{position:absolute;top:100%;margin-top:18px;left:-30px;right:-30px;text-align:center;font-family:var(--mono);font-size:15px;letter-spacing:.24em;text-transform:uppercase;color:var(--mut)}
+.s-link .rec{position:absolute;left:130px;right:130px;bottom:100px;padding:30px 42px;border-radius:32px}
+.s-link .rec .mono{color:var(--acc);font-size:16px}
+.s-link .rec .nm{font-size:44px;margin-top:10px}
+.s-link .rec .nm span{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--mut)}
+.s-link .rec .sm{display:flex;align-items:baseline;gap:18px}
+.s-link .rec a.url{display:inline;margin:0}
+
+/* 9 stand-alone LTC */
+.s-solo .one{margin-top:60px;padding:40px 60px 40px 46px;border-radius:40px;display:flex;align-items:center;gap:40px;text-align:left}
+.s-solo .one svg.ic{width:150px;height:150px;flex:none}
+.s-solo .one .nm{font-size:72px}
+.s-solo .one .sm{font-size:32px}
+.s-solo .chips{display:flex;gap:18px;margin-top:44px}
+.s-solo .chips .chip{font-size:26px;padding:16px 30px}
+
+/* 10 business */
+.s-biz .grid4{position:absolute;left:130px;right:130px;top:410px;bottom:110px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:28px}
+.s-biz .jb{padding:36px 48px;border-radius:34px;display:flex;align-items:center;gap:40px}
+.s-biz .jb svg.ic{width:120px;height:120px;flex:none}
+.s-biz .jb .t{font-size:58px;font-weight:700;letter-spacing:-.035em;line-height:1.02}
+
+/* 11 disability */
+.s-dis .left{position:absolute;left:130px;top:110px;width:1000px}
+.s-dis .left .lede{margin-top:40px;max-width:900px}
+.s-dis .step{margin-top:60px;padding:34px 40px;border-radius:32px;max-width:860px}
+.s-dis .step .mono{color:var(--acc);font-size:16px}
+.s-dis .step .gt{font-size:44px;font-weight:600;letter-spacing:-.025em;line-height:1.15;margin-top:12px}
+.s-dis .step .gt b{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--acc)}
+.s-dis .ringbox{position:absolute;right:200px;top:220px;width:560px;height:560px}
+.s-dis .ringbox svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;transform:rotate(-90deg)}
+.s-dis .ringbox .track{fill:none;stroke:rgba(255,255,255,.08);stroke-width:26}
+.s-dis .ringbox .arc{fill:none;stroke:url(#disg);stroke-width:26;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;filter:drop-shadow(0 0 16px var(--acc))}
+.s-dis.active .ringbox .arc{animation:arc60 2.6s var(--ease) .9s both}
+@keyframes arc60{to{stroke-dashoffset:40}}
+.s-dis .ringbox .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.s-dis .ringbox .big{font-size:230px;font-weight:800;letter-spacing:-.06em;line-height:.9}
+.s-dis .ringbox .mono{color:var(--acc);font-size:17px;margin-top:14px}
+
+/* 12 accumulation retirement */
+.s-acc .head .eyebrow{white-space:nowrap}
+.s-acc .trio{position:absolute;left:130px;top:400px;display:flex;gap:18px}
+.s-acc .trio .chip{font-size:28px;padding:16px 30px}
+.s-acc .cars.acc4{top:520px;bottom:110px;grid-template-columns:repeat(4,1fr);gap:26px}
+.s-acc .car{padding:32px 34px}
+.s-acc .car .nm{font-size:38px}
+.s-acc a.url{font-size:16px;letter-spacing:0;word-break:normal;overflow-wrap:anywhere}
+.s-acc .car.hot{box-shadow:0 0 0 1.5px color-mix(in srgb,var(--acc) 70%,transparent),0 0 70px -14px var(--acc),inset 0 1px 0 rgba(255,255,255,.38)}
+.s-acc .car.hot .nm{font-size:64px}
+
+/* 13 income retirement */
+.s-inc .left{position:absolute;left:130px;top:150px;width:800px}
+.s-inc .left .lede{margin-top:40px}
+.s-inc .rows{position:absolute;left:1000px;right:130px;top:130px;bottom:120px;display:flex;flex-direction:column;gap:22px}
+.s-inc .row3{flex:1;padding:24px 40px;border-radius:30px;display:flex;align-items:center;gap:34px}
+.s-inc .row3 .gn{font-size:110px;font-weight:800;letter-spacing:-.06em;line-height:.85;width:90px;flex:none}
+.s-inc .row3 .gt{font-size:44px;font-weight:700;letter-spacing:-.03em;line-height:1.05}
+.s-inc .row3 .gt span{display:block;font-size:30px;font-weight:400;color:var(--mut);letter-spacing:-.01em;margin-top:6px}
+
+/* 14 ancillary */
+.s-anc .cards{position:absolute;left:130px;right:130px;top:400px;bottom:110px;display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+.s-anc .card{padding:40px 44px;border-radius:36px;display:flex;flex-direction:column}
+.s-anc .card svg.ic{width:110px;height:110px;margin-top:30px}
+.s-anc .card .nm{font-size:56px;margin-top:auto}
+.s-anc .pay{display:flex;flex-direction:column;margin-top:14px}
+.s-anc .pay .gradnum{font-size:58px;font-weight:800;letter-spacing:-.04em;line-height:1}
+.s-anc .pay .lb{font-family:var(--mono);font-size:15px;letter-spacing:.24em;text-transform:uppercase;color:var(--mut);margin-top:10px}
+
+/* 15 securities */
+.s-sec .uni{position:absolute;left:130px;top:410px;width:720px;bottom:110px;padding:42px 46px;border-radius:36px;display:flex;flex-direction:column}
+.s-sec .uni .mono{color:var(--acc);font-size:16px}
+.s-sec .uni .gt{font-family:var(--serif);font-style:italic;font-size:62px;line-height:1.08;margin-top:18px}
+.s-sec .uni .chips{display:flex;flex-wrap:wrap;gap:14px;margin-top:auto}
+.s-sec .uni .chip{font-size:26px;padding:14px 26px}
+.s-sec .prods{position:absolute;left:900px;right:130px;top:410px;bottom:110px;display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:18px}
+.s-sec .prods .lab{grid-column:1/-1;align-self:end}
+.s-sec .p{border-radius:24px;padding:0 30px;display:flex;flex-direction:column;justify-content:center;font-size:34px;font-weight:650;letter-spacing:-.02em;line-height:1.1}
+.s-sec .p span{font-size:20px;font-weight:400;color:var(--mut);letter-spacing:0;margin-top:4px}
+
+/* 16 close */
+.s-end .shade{position:absolute;inset:0;background:radial-gradient(ellipse 60% 55% at 50% 52%,rgba(6,8,10,.62),transparent 75%)}
+.s-end .h1{text-shadow:0 10px 60px rgba(0,0,0,.55)}
+.s-end .h1 em{color:#ffe2ae}
+.s-end .lede{color:#f1ece4;text-shadow:0 2px 24px rgba(0,0,0,.7)}
+.s-end .rise-logo.big{width:160px;height:160px;margin-bottom:40px}
+.s-end .lede{margin-top:34px;max-width:1200px}
+.s-end .meta{margin-top:50px}
+
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<canvas id="motes"></canvas>
+
+<div id="stage">
+<!-- 1 TITLE -->
+<section class="slide s-title" data-calm="0" data-chapter="Start" data-sun=".03">
+<div class="center">
+<div class="shelf a" style="--k:bloom;--t:2.2s;--d:.1s">
+<div class="halo"></div>
+<svg class="pips" viewbox="0 0 380 380">
+<circle class="ring" cx="190" cy="190" r="172"></circle>
+<circle class="pip" cx="190.0" cy="18.0" r="9" style="--i:0"></circle>
+<circle class="pip" cx="276.0" cy="41.0" r="9" style="--i:1"></circle>
+<circle class="pip" cx="339.0" cy="104.0" r="9" style="--i:2"></circle>
+<circle class="pip" cx="362.0" cy="190.0" r="9" style="--i:3"></circle>
+<circle class="pip" cx="339.0" cy="276.0" r="9" style="--i:4"></circle>
+<circle class="pip" cx="276.0" cy="339.0" r="9" style="--i:5"></circle>
+<circle class="pip" cx="190.0" cy="362.0" r="9" style="--i:6"></circle>
+<circle class="pip" cx="104.0" cy="339.0" r="9" style="--i:7"></circle>
+<circle class="pip" cx="41.0" cy="276.0" r="9" style="--i:8"></circle>
+<circle class="pip" cx="18.0" cy="190.0" r="9" style="--i:9"></circle>
+<circle class="pip" cx="41.0" cy="104.0" r="9" style="--i:10"></circle>
+<circle class="pip" cx="104.0" cy="41.0" r="9" style="--i:11"></circle>
+</svg>
+<div class="rise-logo"></div>
+</div>
+<div class="eyebrow c a" data-e="1" style="--d:.6s;--k:track;--t:1.8s">Team RISE · November 2026</div>
+<p class="q split" data-e="2" style="--d:.8s">Top life products on the platform.</p>
+<h1 class="mega split sheen" data-e="3" data-text="The shelf." style="--d:1.5s">The <em>shelf.</em></h1>
+<p class="lede a" data-e="4" style="--d:2.4s">Twelve product lines. <em style="color:#fff">Who to call for each.</em></p>
+</div>
+<div class="meta a" style="--d:2.8s;--k:fade"><span class="chip" data-e="5"><span class="dot pulse"></span>Revolution Financial Management</span></div>
+</section>
+<!-- 2 DISCLAIMER -->
+<section class="slide s-disc" data-calm=".35" data-chapter="Start">
+<div class="head"><div class="eyebrow a" data-e="6" style="--d:.1s">00 · Read first</div><h1 class="h1 split" data-e="7" style="--d:.2s">Internal <em>training only.</em></h1></div>
+<div class="list">
+<div class="glass it a" style="--k:left;--d:.6s"><svg class="ic" viewbox="0 0 100 100"><path class="draw" d="M50 14a36 36 0 1 0 .1 0M50 32v22l14 10" pathlength="1" style="--d:1s"></path></svg><div class="t" data-e="8">Products, providers, and rates <b>change often.</b></div></div>
+<div class="glass it a" style="--k:left;--d:.72s"><svg class="ic" viewbox="0 0 100 100"><path class="draw" d="M50 12 82 24v24c0 20-14 34-32 40-18-6-32-20-32-40V24z" pathlength="1" style="--d:1.2s"></path><path class="draw" d="M36 50l10 10 18-20" pathlength="1" style="--d:1.5s"></path></svg><div class="t" data-e="9">Do not share this video <b>outside Team RISE.</b></div></div>
+<div class="glass it a" style="--k:left;--d:.84s"><svg class="ic" viewbox="0 0 100 100"><path class="draw" d="M50 20 L90 37 L50 54 L10 37 Z" pathlength="1" style="--d:1.4s"></path><path class="draw" d="M26 44v20c10 9 38 9 48 0V44M90 37v22" pathlength="1" style="--d:1.7s"></path></svg><div class="t" data-e="10">For internal <b>training purposes only.</b></div></div>
+<div class="glass it tall a" style="--k:left;--d:.96s"><svg class="ic" viewbox="0 0 100 100"><circle class="draw" cx="50" cy="50" pathlength="1" r="36" style="--d:1.6s"></circle><path class="draw" d="M50 30v26M50 68v2" pathlength="1" style="--d:1.9s"></path></svg><div class="t" data-e="11">Not financial advice and not a recommendation. <span>For the specifics of your unique situation, contact a licensed professional for a full financial analysis.</span></div></div>
+</div>
+</section>
+<!-- 3 THE SHELF -->
+<section class="slide s-map" data-calm=".4" data-chapter="Start">
+<div class="head"><div class="eyebrow a" data-e="12" style="--d:.1s">01 · The whole shelf</div><h1 class="h1 split" data-e="13" style="--d:.2s">Twelve lines. <em>One map.</em></h1></div>
+<div class="grid12">
+<div class="glass cell life a" style="--k:pop;--e:var(--spring);--d:.7s"><div class="n" data-e="14">01</div><div class="t" data-e="15">Pure life</div><div class="k" data-e="16">Life</div></div>
+<div class="glass cell life a" style="--k:pop;--e:var(--spring);--d:.78s"><div class="n" data-e="17">02</div><div class="t" data-e="18">Final expense</div><div class="k" data-e="19">Life</div></div>
+<div class="glass cell life a" style="--k:pop;--e:var(--spring);--d:.86s"><div class="n" data-e="20">03</div><div class="t" data-e="21">Cash accumulation IULs</div><div class="k" data-e="22">Life</div></div>
+<div class="glass cell ltc a" style="--k:pop;--e:var(--spring);--d:.94s"><div class="n" data-e="23">04</div><div class="t" data-e="24">Life + LTC</div><div class="k" data-e="25">Long-term care</div></div>
+<div class="glass cell ltc a" style="--k:pop;--e:var(--spring);--d:1.02s"><div class="n" data-e="26">05</div><div class="t" data-e="27">Linked-benefit LTC</div><div class="k" data-e="28">Long-term care</div></div>
+<div class="glass cell ltc a" style="--k:pop;--e:var(--spring);--d:1.1s"><div class="n" data-e="29">06</div><div class="t" data-e="30">Stand-alone LTC</div><div class="k" data-e="31">Long-term care</div></div>
+<div class="glass cell biz a" style="--k:pop;--e:var(--spring);--d:1.18s"><div class="n" data-e="32">07</div><div class="t" data-e="33">Plans for businesses</div><div class="k" data-e="34">Business</div></div>
+<div class="glass cell biz a" style="--k:pop;--e:var(--spring);--d:1.26s"><div class="n" data-e="35">08</div><div class="t" data-e="36">Disability</div><div class="k" data-e="37">Income</div></div>
+<div class="glass cell ret a" style="--k:pop;--e:var(--spring);--d:1.34s"><div class="n" data-e="38">09</div><div class="t" data-e="39">Accumulation retirement</div><div class="k" data-e="40">Rollovers</div></div>
+<div class="glass cell ret a" style="--k:pop;--e:var(--spring);--d:1.42s"><div class="n" data-e="41">10</div><div class="t" data-e="42">Income retirement</div><div class="k" data-e="43">Rollovers</div></div>
+<div class="glass cell more a" style="--k:pop;--e:var(--spring);--d:1.5s"><div class="n" data-e="44">11</div><div class="t" data-e="45">Ancillary services</div><div class="k" data-e="46">Extra</div></div>
+<div class="glass cell more a" style="--k:pop;--e:var(--spring);--d:1.58s"><div class="n" data-e="47">12</div><div class="t" data-e="48">Securities</div><div class="k" data-e="49">Licensed</div></div>
+</div>
+</section>
+<!-- 4 PURE LIFE -->
+<section class="slide s-pure" data-calm=".45" data-chapter="Life">
+<div class="head"><div class="eyebrow a" data-e="50" style="--d:.1s">02 · Pure life</div><h1 class="h1 split" data-e="51" style="--d:.2s">Term with <em>living benefits.</em></h1></div>
+<div class="ills">
+<div class="glass ill a depth" style="--k:depth;--t:1.5s;--d:.6s;--z:6"><svg class="ic" viewbox="0 0 100 100"><path class="draw" d="M50 84S14 62 14 36a18 18 0 0 1 36-6 18 18 0 0 1 36 6c0 26-36 48-36 48z" pathlength="1" style="--d:1s"></path></svg><div class="t" data-e="52">Terminal illness</div></div>
+<div class="glass ill a depth" style="--k:depth;--t:1.5s;--d:.72s;--z:9"><svg class="ic" viewbox="0 0 100 100"><path class="draw" d="M8 52h20l8-20 14 40 10-28 6 8h26" pathlength="1" style="--d:1.15s"></path></svg><div class="t" data-e="53">Critical illness</div></div>
+<div class="glass ill a depth" style="--k:depth;--t:1.5s;--d:.84s;--z:12"><svg class="ic" viewbox="0 0 100 100"><path class="draw" d="M38 12h24v26h26v24H62v26H38V62H12V38h26z" pathlength="1" style="--d:1.3s"></path></svg><div class="t" data-e="54">Chronic illness</div></div>
+</div>
+<div class="lab a" data-e="55" style="--d:1.2s">Top 2 carriers</div>
+<div class="cars two">
+<div class="glass car a" style="--k:rise;--d:1.3s"><div class="nm" data-e="56">Transamerica</div><div class="ph" data-e="57">800-322-3796</div><a class="url" data-e="58" href="https://www.transamerica.com/agent-central" target="_blank">transamerica.com/agent-central</a></div>
+<div class="glass car a" style="--k:rise;--d:1.45s"><div class="nm" data-e="59">Nationwide</div><div class="ph" data-e="60">855-455-4139</div><a class="url" data-e="61" href="https://financial.nationwide.com/wfg" target="_blank">financial.nationwide.com/wfg</a></div>
+</div>
+</section>
+<!-- 5 FINAL EXPENSE -->
+<section class="slide s-duo" data-calm=".45" data-chapter="Life">
+<div class="head"><div class="eyebrow a" data-e="62" style="--d:.1s">03 · Final expense</div><h1 class="h1 split" data-e="63" style="--d:.2s">Final expense <em>plans.</em></h1></div>
+<div class="cols">
+<div class="glass big a depth" style="--k:depth;--t:1.5s;--d:.6s;--z:6">
+<div class="n" data-e="64">Fully underwritten</div>
+<svg class="ic" viewbox="0 0 100 100"><path class="draw" d="M26 12h34l16 16v60H26z" pathlength="1" style="--d:1s"></path><path class="draw" d="M60 12v16h16M36 46h28M36 58h28M36 70h16" pathlength="1" style="--d:1.3s"></path></svg>
+<div class="nm" data-e="65">Transamerica Final Expense</div>
+<a class="url" data-e="66" href="https://www.transamerica.com/agent-central" target="_blank">transamerica.com/agent-central</a>
+</div>
+<div class="glass big a depth" style="--k:depth;--t:1.5s;--d:.75s;--z:9">
+<div class="n" data-e="67">Guaranteed issue</div>
+<svg class="ic" viewbox="0 0 100 100"><path class="draw" d="M50 12 82 24v24c0 20-14 34-32 40-18-6-32-20-32-40V24z" pathlength="1" style="--d:1.15s"></path><path class="draw" d="M36 50l10 10 18-20" pathlength="1" style="--d:1.5s"></path></svg>
+<div class="nm" data-e="68">Gerber</div>
+<div class="sm" data-e="69">Through Crump · <b>888-232-4872</b></div>
+</div>
+</div>
+</section>
+<!-- 6 IULS -->
+<section class="slide s-iul" data-calm=".45" data-chapter="Life">
+<div class="head"><div class="eyebrow a" data-e="70" style="--d:.1s">04 · Cash accumulation</div><h1 class="h1 split" data-e="71" style="--d:.2s">IULs that <em>build cash.</em></h1></div>
+<svg class="climb" viewbox="0 0 1660 260"><path class="base" d="M0 240 C300 230 420 170 620 150 S1000 90 1200 60 S1500 20 1660 10"></path><path class="lit draw" d="M0 240 C300 230 420 170 620 150 S1000 90 1200 60 S1500 20 1660 10" pathlength="1" style="--d:.5s;animation-duration:3s"></path></svg>
+<div class="cars three">
+<div class="glass car a depth" style="--k:depth;--t:1.5s;--d:.7s;--z:6"><div class="n" data-e="72">01</div><div class="nm" data-e="73">Nationwide Accumulator III</div><a class="url" data-e="74" href="https://financial.nationwide.com/wfg" target="_blank">financial.nationwide.com/wfg</a></div>
+<div class="glass car a depth" style="--k:depth;--t:1.5s;--d:.85s;--z:9"><div class="n" data-e="75">02</div><div class="nm" data-e="76">Transamerica FFIUL II Express</div><a class="url" data-e="77" href="https://www.transamerica.com/agent-central" target="_blank">transamerica.com/agent-central</a></div>
+<div class="glass car a depth" style="--k:depth;--t:1.5s;--d:1s;--z:12"><div class="n" data-e="78">03</div><div class="nm" data-e="79">Pacific Life</div><a class="url" data-e="80" href="https://www.pacificlife.com/home/financial-professionals-and-brokers.html" target="_blank">pacificlife.com · financial professionals</a></div>
+</div>
+</section>
+<!-- 7 LIFE + LTC -->
+<section class="slide s-vs" data-calm=".45" data-chapter="Long-term care">
+<div class="head"><div class="eyebrow a" data-e="81" style="--d:.1s">05 · Life + LTC · Accelerated death benefit</div><h1 class="h1 split" data-e="82" style="--d:.2s">Two riders. <em>Two rules.</em></h1></div>
+<div class="vs">
+<div class="glass side a" style="--k:left;--d:.6s">
+<div class="n" data-e="83">Nationwide</div>
+<div class="nm" data-e="84">Protector IUL + LTC</div>
+<div class="pcts"><span class="gradnum" data-e="85">2%</span><span class="gradnum" data-e="86">3%</span><span class="gradnum" data-e="87">4%</span></div>
+<div class="r" data-e="88"><span class="dot"></span>Pick a 2%, 3%, or 4% LTC rider</div>
+<div class="r"><span class="dot"></span><span data-e="89"><b>Does not</b> increase with the death benefit</span></div>
+</div>
+<div class="mid a" data-e="90" style="--k:pop;--e:var(--spring);--d:1.1s">vs</div>
+<div class="glass side a" style="--k:right;--d:.75s">
+<div class="n" data-e="91">Transamerica</div>
+<div class="nm" data-e="92">FFIUL II + LTC</div>
+<div class="pcts"><span class="gradnum" data-e="93">2%</span></div>
+<div class="r" data-e="94"><span class="dot"></span>Fixed at 2% of the death benefit</div>
+<div class="r"><span class="dot"></span><span data-e="95"><b>Does</b> increase with the death benefit</span></div>
+</div>
+</div>
+</section>
+<!-- 8 LINKED BENEFIT -->
+<section class="slide s-link" data-calm=".45" data-chapter="Long-term care">
+<div class="left">
+<div class="eyebrow a" data-e="96" style="--d:.1s">06 · Linked-benefit LTC</div>
+<h1 class="h1 split" data-e="97" style="--d:.2s;margin-top:20px">Less death benefit.<br/><em>More care.</em></h1>
+<div class="rules">
+<div class="r a" style="--k:left;--d:1.1s"><span class="dot"></span><div data-e="98"><b>Smaller death benefit,</b> larger LTC pool</div></div>
+<div class="r a" style="--k:left;--d:1.25s"><span class="dot"></span><div><b data-e="99">Inflation protection</b></div></div>
+<div class="r a" style="--k:left;--d:1.4s"><span class="dot"></span><div data-e="100">Can opt for a <b>longer benefit period</b></div></div>
+</div>
+</div>
+<div class="scale a" style="--k:depth;--t:1.6s;--d:.5s">
+<div class="bar db"><div class="fill" style="--h:34%"></div><div class="cap" data-e="101">Death benefit</div></div>
+<div class="bar care"><div class="fill" style="--h:92%"></div><div class="cap" data-e="102">Long-term care</div></div>
+</div>
+<div class="glass rec a" style="--k:rise;--d:1.7s">
+<div class="mono" data-e="103">Recommended carrier</div>
+<div class="nm" data-e="104">Nationwide CareMatters <span>or</span> CareMatters Together</div>
+<div class="sm" data-e="105">Indemnity style · <a class="url" href="https://financial.nationwide.com/wfg" target="_blank">financial.nationwide.com/wfg</a></div>
+</div>
+</section>
+<!-- 9 STAND-ALONE LTC -->
+<section class="slide s-solo" data-calm=".3" data-chapter="Long-term care" data-sun=".45">
+<div class="center">
+<div class="eyebrow c a" data-e="106" style="--d:.1s;--k:track;--t:1.6s">07 · Stand-alone LTC</div>
+<h1 class="h1 split" data-e="107" style="--d:.3s;margin-top:28px">Just the care. <em>Nothing else.</em></h1>
+<div class="glass one a" style="--k:bloom;--t:1.6s;--d:1s">
+<svg class="ic" viewbox="0 0 100 100"><path class="draw" d="M14 50 50 18l36 32M24 42v42h52V42" pathlength="1" style="--d:1.4s"></path><path class="draw" d="M50 76S36 66 36 57a7 7 0 0 1 14-3 7 7 0 0 1 14 3c0 9-14 19-14 19z" pathlength="1" style="--d:1.8s"></path></svg>
+<div>
+<div class="nm" data-e="108">Mutual of Omaha</div>
+<div class="sm" data-e="109">Through Crump · <b>800-678-4582</b></div>
+</div>
+</div>
+<div class="chips a" style="--d:1.6s"><span class="chip acc" data-e="110"><span class="dot"></span>Inflation protection</span><span class="chip acc" data-e="111"><span class="dot"></span>Very cost effective</span></div>
+</div>
+</section>
+<!-- 10 BUSINESS -->
+<section class="slide s-biz" data-calm=".45" data-chapter="Business">
+<div class="head"><div class="eyebrow a" data-e="112" style="--d:.1s">08 · Business owners</div><h1 class="h1 split" data-e="113" style="--d:.2s">Plans for <em>businesses.</em></h1></div>
+<div class="grid4">
+<div class="glass jb a" style="--k:depth;--d:.6s"><svg class="ic" viewbox="0 0 100 100"><path class="draw" d="M14 86h72M22 86V56h14v30M43 86V40h14v46M64 86V22h14v64" pathlength="1" style="--d:1s"></path></svg><div class="t" data-e="114">401(k)</div></div>
+<div class="glass jb a" style="--k:depth;--d:.75s"><svg class="ic" viewbox="0 0 100 100"><circle class="draw" cx="38" cy="50" pathlength="1" r="18" style="--d:1.15s"></circle><path class="draw" d="M56 50h32M78 50v14M88 50v10" pathlength="1" style="--d:1.45s"></path></svg><div class="t" data-e="115">Key person</div></div>
+<div class="glass jb a" style="--k:depth;--d:.9s"><svg class="ic" viewbox="0 0 100 100"><path class="draw" d="M50 10l11 23 25 3-18 17 5 25-23-12-23 12 5-25-18-17 25-3z" pathlength="1" style="--d:1.3s"></path></svg><div class="t" data-e="116">Executive bonus plans</div></div>
+<div class="glass jb a" style="--k:depth;--d:1.05s"><svg class="ic" viewbox="0 0 100 100"><path class="draw" d="M12 34h76v44H12zM12 46h76" pathlength="1" style="--d:1.45s"></path><circle class="draw" cx="66" cy="62" pathlength="1" r="7" style="--d:1.75s"></circle></svg><div class="t" data-e="117">Cash balance plans</div></div>
+</div>
+</section>
+<!-- 11 DISABILITY -->
+<section class="slide s-dis" data-calm=".45" data-chapter="Disability">
+<div class="left">
+<div class="eyebrow a" data-e="118" style="--d:.1s">09 · Disability · through Crump</div>
+<h1 class="h1 split" data-e="119" style="--d:.2s;margin-top:20px">Protect <em>the paycheck.</em></h1>
+<p class="lede a" data-e="120" style="--d:1.1s">Replaces a percent of someone's income when a disability keeps them from working.</p>
+<div class="glass step a" style="--k:left;--d:1.5s">
+<div class="mono" data-e="121">To get started</div>
+<div class="gt" data-e="122">Get appointed with <b>Principal</b> on mywfg.com.</div>
+</div>
+</div>
+<div class="ringbox a" style="--k:depth;--t:1.6s;--d:.5s">
+<svg viewbox="0 0 560 560"><defs><lineargradient id="disg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" style="stop-color:var(--acc2)"></stop><stop offset="1" style="stop-color:var(--acc)"></stop></lineargradient></defs>
+<circle class="track" cx="280" cy="280" r="250"></circle><circle class="arc" cx="280" cy="280" pathlength="100" r="250"></circle></svg>
+<div class="mid"><div class="big gradnum" data-e="123">%</div><div class="mono" data-e="124">of income replaced</div></div>
+</div>
+</section>
+<!-- 12 ACCUMULATION RETIREMENT -->
+<section class="slide s-acc" data-calm=".45" data-chapter="Retirement">
+<div class="head"><div class="eyebrow a" data-e="125" style="--d:.1s">10 · Accumulation-focused retirement · Rollovers</div><h1 class="h1 split" data-e="126" style="--d:.2s">Grow it. <em>Never lose it.</em></h1></div>
+<div class="trio a" style="--d:.9s">
+<span class="chip acc" data-e="127"><span class="dot"></span>Guaranteed no loss</span>
+<span class="chip acc" data-e="128"><span class="dot"></span>No fees</span>
+<span class="chip acc" data-e="129"><span class="dot"></span>Potential for market-like gains</span>
+</div>
+<div class="cars acc4">
+<div class="glass car a depth" style="--k:depth;--t:1.5s;--d:1s;--z:6"><div class="n" data-e="130">Single premium</div><div class="nm" data-e="131">Global Atlantic ForeAccumulation</div><a class="url" data-e="132" href="https://professionals.globalatlantic.com/resources/illustrations" target="_blank">professionals.globalatlantic.com</a></div>
+<div class="glass car a depth" style="--k:depth;--t:1.5s;--d:1.15s;--z:9"><div class="n" data-e="133">Flexible premiums</div><div class="nm" data-e="134">F&amp;G</div><a class="url" data-e="135" href="https://success.fglife.com/annuities/wfg" target="_blank">success.fglife.com/annuities/wfg</a><a class="url" data-e="136" href="https://saleslink.fglife.com/login/portallogin" target="_blank">saleslink.fglife.com</a></div>
+<div class="glass car a depth" style="--k:depth;--t:1.5s;--d:1.3s;--z:12"><div class="n" data-e="137">And more</div><div class="nm" data-e="138">Corebridge, Athene, and many other providers</div></div>
+<div class="glass car hot a depth" style="--k:depth;--t:1.5s;--d:1.45s;--z:15"><div class="n" data-e="139">Go through</div><div class="nm" data-e="140">AMS</div><div class="ph" data-e="141">800-448-4510</div><a class="url" data-e="142" href="https://wfg.amsfsg.com/Login.aspx" target="_blank">wfg.amsfsg.com</a></div>
+</div>
+</section>
+<!-- 13 INCOME RETIREMENT -->
+<section class="slide s-inc" data-calm=".4" data-chapter="Retirement" data-sun=".8">
+<div class="left">
+<div class="eyebrow a" data-e="143" style="--d:.1s">11 · Income retirement · Rollovers</div>
+<h1 class="h1 split" data-e="144" style="--d:.2s;margin-top:20px">A paycheck<br/><em>for life.</em></h1>
+<p class="lede a" data-e="145" style="--d:1.1s">Common carriers for turning savings into steady income.</p>
+</div>
+<div class="rows">
+<div class="glass row3 a" style="--k:right;--d:.6s"><div class="gn gradnum" data-e="146">1</div><div class="gt" data-e="147">North American <span>Income Pay Pro</span></div></div>
+<div class="glass row3 a" style="--k:right;--d:.75s"><div class="gn gradnum" data-e="148">2</div><div class="gt" data-e="149">F&amp;G <span>Safe Income</span></div></div>
+<div class="glass row3 a" style="--k:right;--d:.9s"><div class="gn gradnum" data-e="150">3</div><div class="gt" data-e="151">Nationwide <span>New Heights Select</span></div></div>
+<div class="glass row3 a" style="--k:right;--d:1.05s"><div class="gn gradnum" data-e="152">4</div><div class="gt" data-e="153">Global Atlantic <span>150+ or ForeIncome</span></div></div>
+</div>
+</section>
+<!-- 14 ANCILLARY -->
+<section class="slide s-anc" data-calm=".45" data-chapter="More">
+<div class="head"><div class="eyebrow a" data-e="154" style="--d:.1s">12 · Ancillary services</div><h1 class="h1 split" data-e="155" style="--d:.2s">More ways <em>to help.</em></h1></div>
+<div class="cards">
+<div class="glass card a depth" style="--k:depth;--t:1.5s;--d:.6s;--z:6">
+<div class="n" data-e="156">Debt settlement</div>
+<svg class="ic" viewbox="0 0 100 100"><path class="draw" d="M14 30h72v40H14z" pathlength="1" style="--d:1s"></path><path class="draw" d="M20 84 84 16" pathlength="1" style="--d:1.3s"></path></svg>
+<div class="nm" data-e="157">Marco</div>
+<div class="pay"><span class="gradnum" data-e="158">$250</span><span class="lb" data-e="159">minimum compensation</span></div>
+</div>
+<div class="glass card a depth" style="--k:depth;--t:1.5s;--d:.75s;--z:9">
+<div class="n" data-e="160">Wills and trusts</div>
+<svg class="ic" viewbox="0 0 100 100"><path class="draw" d="M26 12h34l16 16v60H26z" pathlength="1" style="--d:1.15s"></path><path class="draw" d="M60 12v16h16M36 74c6-8 10 4 16-4s8 2 14-2" pathlength="1" style="--d:1.45s"></path></svg>
+<div class="nm" data-e="161">InheritGuard</div>
+<div class="pay"><span class="gradnum" data-e="162">$300 to $600</span><span class="lb" data-e="163">your compensation</span></div>
+<a class="url" data-e="164" href="https://inheritguard.com/register/" target="_blank">inheritguard.com/register</a>
+</div>
+<div class="glass card a depth" style="--k:depth;--t:1.5s;--d:.9s;--z:12">
+<div class="n" data-e="165">Pet · Commercial · Auto</div>
+<svg class="ic" viewbox="0 0 100 100"><path class="draw" d="M56 8 22 56h26l-6 36 36-50H52z" pathlength="1" style="--d:1.3s"></path></svg>
+<div class="nm" data-e="166">BOLT</div>
+<div class="sm" data-e="167">On <b>mywfg.com</b></div>
+</div>
+</div>
+</section>
+<!-- 15 SECURITIES -->
+<section class="slide s-sec" data-calm=".45" data-chapter="Securities">
+<div class="head"><div class="eyebrow a" data-e="168" style="--d:.1s">13 · Securities · SIE, Series 6, 63, 65</div><h1 class="h1 split" data-e="169" style="--d:.2s">Open <em>architecture.</em></h1></div>
+<div class="glass uni a" style="--k:left;--d:.7s">
+<div class="mono" data-e="170">Custodians and money managers</div>
+<div class="gt" data-e="171">A universe of options.</div>
+<div class="chips"><span class="chip" data-e="172">Fidelity</span><span class="chip" data-e="173">BlackRock</span><span class="chip" data-e="174">Schwab</span><span class="chip" data-e="175">Vanguard</span><span class="chip" data-e="176">Empower</span><span class="chip" data-e="177">and more</span></div>
+</div>
+<div class="prods">
+<div class="lab a" data-e="178" style="--d:1s">Products</div>
+<div class="glass p a" data-e="179" style="--k:pop;--e:var(--spring);--d:1.1s">Roth IRAs</div>
+<div class="glass p a" data-e="180" style="--k:pop;--e:var(--spring);--d:1.17s">401(k)</div>
+<div class="glass p a" data-e="181" style="--k:pop;--e:var(--spring);--d:1.24s">SEP IRAs</div>
+<div class="glass p a" data-e="182" style="--k:pop;--e:var(--spring);--d:1.31s">Mutual funds</div>
+<div class="glass p a" data-e="183" style="--k:pop;--e:var(--spring);--d:1.38s">UITs</div>
+<div class="glass p a" data-e="184" style="--k:pop;--e:var(--spring);--d:1.45s">529s <span>college funds</span></div>
+<div class="glass p a" data-e="185" style="--k:pop;--e:var(--spring);--d:1.52s">Custodial <span>UTMA</span></div>
+<div class="glass p a" data-e="186" style="--k:pop;--e:var(--spring);--d:1.59s">Advisory <span>active money management</span></div>
+</div>
+</section>
+<!-- 16 CLOSE -->
+<section class="slide s-end" data-calm="0" data-chapter="Start" data-sun="1">
+<div class="shade"></div>
+<div class="center">
+<div class="rise-logo big a" style="--k:bloom;--t:2s;--d:.2s"></div>
+<div class="eyebrow c a" data-e="187" style="--d:.7s;--k:track;--t:1.6s">Team RISE</div>
+<h1 class="h1 split" data-e="188" style="--d:.9s;margin-top:26px;font-size:150px">Know the shelf.<br/><em>Serve the family.</em></h1>
+<p class="lede a" data-e="189" style="--d:2s">Products and rates change often. Check the carrier site before every illustration.</p>
+<div class="meta a" style="--d:2.5s;--k:fade"><span class="chip" data-e="190"><span class="dot pulse"></span>Revolution Financial Management</span></div>
+</div>
+</section>
+
+</div>
+
+<div id="hud">
+  <div class="tl"><div class="rise-logo"></div><span>Team RISE · Top Products</span></div>
+  <div class="tr"><span id="chap"></span><b id="cnt"></b></div>
+  <div id="prog"></div>
+  <div id="tbtn"><button data-a="grid" title="See every slide">▦</button><button data-a="fs" title="Full screen">⤢</button></div>
+</div>
+<div id="rot">↻ Turn your phone sideways for full size</div>
+<div id="help"><div class="glass"><h3>Presenter keys</h3><table>
+<tbody><tr><td>→ SPACE CLICK</td><td>Next slide</td></tr>
+<tr><td>←</td><td>Back</td></tr>
+<tr><td>O</td><td>See every slide (tap one to jump)</td></tr>
+<tr><td>F</td><td>Full screen</td></tr>
+<tr><td>?</td><td>Show or hide this card</td></tr>
+</tbody></table></div></div>
+<div id="toast"></div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const COARSE=matchMedia('(pointer: coarse)').matches;
+const PTR={x:0,y:0};
+const stage=$('#stage'),slides=$$('.slide'),N=slides.length;
+let idx=-1,S=1,OX=0,OY=0,editing=false,overview=false;
+
+/* RISE mark */
+function riseSVG(){const id='rc'+Math.random().toString(36).slice(2,8);let r='';for(let i=0;i<9;i++){const a=(190+i*20)*Math.PI/180,h=5.6*Math.PI/180,L=150;r+=`<polygon points="100,122 ${(100+L*Math.cos(a-h)).toFixed(1)},${(122+L*Math.sin(a-h)).toFixed(1)} ${(100+L*Math.cos(a+h)).toFixed(1)},${(122+L*Math.sin(a+h)).toFixed(1)}"/>`}
+return `<svg viewBox="0 0 200 200"><defs><clipPath id="${id}"><circle cx="100" cy="100" r="90"/></clipPath><radialGradient id="${id}g" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#3f8c9c"/><stop offset="1" stop-color="#25586a"/></radialGradient></defs><circle cx="100" cy="100" r="99" fill="#fff"/><circle cx="100" cy="100" r="91" fill="url(#${id}g)"/><g clip-path="url(#${id})"><g class="rays" fill="#fff">${r}</g><path d="M-20 205 L100 110 L220 205Z" fill="#fff"/><path d="M62 140 q19 -9 38 -2 t38 -2" stroke="#33707f" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M-20 205 L100 110 L220 205" stroke="#33707f" stroke-width="3" fill="none"/><text x="100" y="181" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="42" font-weight="800" fill="#33707f">RISE</text></g></svg>`}
+$$('.rise-logo').forEach(el=>el.innerHTML=riseSVG());
+
+/* split headlines into letters */
+function split(el){if(!el.dataset.src)el.dataset.src=el.innerHTML;let i=0;
+  const walk=node=>{[...node.childNodes].forEach(n=>{if(n.nodeType===3){const frag=document.createDocumentFragment();n.textContent.split(/(\s+)/).forEach(w=>{if(!w)return;if(/^\s+$/.test(w)){frag.appendChild(document.createTextNode(' '));return}const ws=document.createElement('span');ws.className='w';[...w].forEach(c=>{const cs=document.createElement('span');cs.className='ch';cs.style.setProperty('--i',i++);cs.textContent=c;ws.appendChild(cs)});frag.appendChild(ws)});n.replaceWith(frag)}else if(n.nodeType===1)walk(n)})};
+  walk(el);el.setAttribute('data-text',el.textContent)}
+function unsplit(el){if(el.dataset.src!=null){el.innerHTML=el.dataset.src}}
+$$('.split').forEach(split);
+
+/* per-slide sunrise + accent */
+slides.forEach((s,i)=>{const p=s.dataset.sun!=null?+s.dataset.sun:.04+i/(N-1)*.92;s.dataset.p=p;s.style.setProperty('--pp',Math.round(Math.min(1,p*1.05)*100)+'%')});
+
+/* fit stage */
+function fit(){const top=window.EDITBAR||0;S=Math.min(innerWidth/1920,(innerHeight-top)/1080);OX=(innerWidth-1920*S)/2;OY=top+(innerHeight-top-1080*S)/2;stage.style.transform=`translate(${OX}px,${OY}px) scale(${S})`;BG.resize();MOTES.resize()}
+
+/* ---------- WebGL dawn ---------- */
+const BG=(()=>{const c=$('#bg');const gl=c.getContext('webgl',{antialias:false,premultipliedAlpha:false});
+  if(!gl){document.body.style.background='radial-gradient(ellipse at 50% 100%,#1b4b55,#03070b 70%)';return{resize(){},to(){}}}
+  const vs='attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  const fs=`precision highp float;uniform vec2 R;uniform float T,P,C,K;uniform vec2 M;
+float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
+float fbm(vec2 p){float s=0.,a=.5;for(int i=0;i<5;i++){s+=a*noise(p);p=p*2.02+vec2(3.1,1.7);a*=.5;}return s;}
+void main(){vec2 uv=gl_FragCoord.xy/R;float ar=R.x/R.y;vec2 p=vec2((uv.x-.5)*ar,uv.y)+M*vec2(.014,.009);
+ float hz=.16;vec2 sun=vec2(0.,hz-.13+P*.40);
+ vec3 night=vec3(.006,.012,.028),tealD=vec3(.015,.075,.10),tealH=vec3(.05,.33,.36),gold=vec3(1.,.6,.3);
+ float y=clamp((uv.y-hz)/(1.-hz),0.,1.);
+ vec3 top=mix(night,tealD,P);
+ vec3 hzc=mix(vec3(.025,.10,.14),mix(tealH,gold*.9,smoothstep(.45,1.,P)),smoothstep(0.,.55,P));
+ vec3 col=mix(hzc,top,pow(y,.42));
+ vec2 g=floor(gl_FragCoord.xy/2.);float st=hash(g);float tw=.5+.5*sin(T*1.7+st*60.);
+ col+=vec3(.8,.92,1.)*step(.9982,st)*tw*(1.-P*.9)*smoothstep(.3,.75,uv.y)*.85;
+ float a=fbm(vec2(p.x*1.1+T*.012,p.y*1.7-T*.018)+fbm(p*1.6+T*.008));
+ float rib=smoothstep(.48,.86,a)*smoothstep(1.,.5,uv.y)*smoothstep(.22,.55,uv.y);
+ vec3 auc=mix(vec3(.12,.78,.74),vec3(1.,.56,.36),P);
+ col+=rib*auc*.24*(1.-C*.7);
+ vec2 d=p-sun;float r=length(d);
+ vec3 sc=mix(vec3(.3,.9,.86),vec3(1.,.74,.42),smoothstep(.15,.9,P));
+ col+=sc*(.03/(r*r+.03))*(.16+.5*P)*(1.-C*.35)*K;
+ float ang=atan(d.x,d.y)+sin(T*.05)*.02;
+ float rays=pow(max(0.,cos(ang*18.)),7.)*smoothstep(1.75,.2,abs(ang));
+ rays*=smoothstep(1.5,.08,r)*(.35+.65*fbm(vec2(ang*4.,T*.07)));
+ col+=sc*rays*(.08+.22*P)*(1.-C*.6)*K*smoothstep(hz-.01,hz+.08,uv.y);
+ float x=p.x;
+ float m1=hz+.15-abs(x)*.40+(fbm(vec2(x*4.,1.))-.5)*.035;
+ m1=max(m1,hz+.015+(fbm(vec2(x*2.2,5.))-.5)*.05);
+ float m2=hz+.075-abs(x-.62)*.22+(fbm(vec2(x*3.,9.))-.5)*.04;
+ float m3=hz+.07-abs(x+.66)*.2+(fbm(vec2(x*3.,13.))-.5)*.04;
+ float mtn=max(m1,max(m2,m3));
+ float rim=exp(-abs(uv.y-mtn)*160.)*smoothstep(.75,0.,abs(x-sun.x))*(.25+.9*P);
+ if(uv.y<mtn){vec3 base=mix(vec3(.008,.02,.03),vec3(.03,.06,.075),P);col=base*(.5+.5*uv.y/mtn)+sc*.05*P;}
+ col+=sc*rim*.55;
+ float v=smoothstep(1.35,.25,length((uv-vec2(.5,.45))*vec2(ar*.75,1.)));col*=mix(.5,1.,v);
+ col+=(hash(gl_FragCoord.xy+fract(T*7.)*91.)-.5)*.022;
+ gl_FragColor=vec4(pow(max(col,0.),vec3(.96)),1.);}`;
+  const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))console.error(gl.getShaderInfoLog(o));return o};
+  const pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,vs));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fs));gl.linkProgram(pr);gl.useProgram(pr);
+  const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);const lp=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(lp);gl.vertexAttribPointer(lp,2,gl.FLOAT,false,0,0);
+  const U=n=>gl.getUniformLocation(pr,n),uR=U('R'),uT=U('T'),uP=U('P'),uC=U('C'),uM=U('M'),uK=U('K');
+  let P=0,tp=0,C=0,tc=0,K=0,mx=0,my=0;const t0=performance.now();
+  function resize(){const q=.55;c.width=Math.round(innerWidth*q*Math.min(devicePixelRatio,2)/1.4);c.height=Math.round(innerHeight*q*Math.min(devicePixelRatio,2)/1.4);gl.viewport(0,0,c.width,c.height)}
+  (function loop(){P+=(tp-P)*.022;C+=(tc-C)*.03;K+=(1-K)*.012;mx+=(PTR.x-mx)*.04;my+=(PTR.y-my)*.04;
+    gl.uniform2f(uR,c.width,c.height);gl.uniform1f(uT,RM?0:(performance.now()-t0)/1000);gl.uniform1f(uP,P);gl.uniform1f(uC,C);gl.uniform1f(uK,K);gl.uniform2f(uM,mx,-my);gl.drawArrays(gl.TRIANGLES,0,3);requestAnimationFrame(loop)})();
+  return{resize,to(p,c){tp=p;tc=c}}})();
+
+/* ---------- light motes ---------- */
+const MOTES=(()=>{const c=$('#motes'),x=c.getContext('2d');let dpr=1,M=[],boost=0;
+  function resize(){dpr=Math.min(devicePixelRatio||1,2);c.width=innerWidth*dpr;c.height=innerHeight*dpr;const n=Math.round(innerWidth*innerHeight/26000);M=Array.from({length:n},mk)}
+  function mk(){return{x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.8+.4,v:Math.random()*.25+.06,w:Math.random()*6.28,a:Math.random()*.5+.15}}
+  function frame(){x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,innerWidth,innerHeight);const col=getComputedStyle(document.documentElement).getPropertyValue('--mote')||'255,220,170';
+    for(const m of M){m.y-=m.v*(1+boost*3);m.w+=.01;m.x+=Math.sin(m.w)*.25;if(m.y<-10){m.y=innerHeight+10;m.x=Math.random()*innerWidth}
+      const fl=.6+.4*Math.sin(m.w*3);x.fillStyle=`rgba(${col},${m.a*fl})`;x.beginPath();x.arc(m.x,m.y,m.r,0,6.283);x.fill()}
+    boost*=.97;if(!RM)requestAnimationFrame(frame)}
+  frame();return{resize,kick(){boost=1}}})();
+
+/* ---------- pointer: parallax + glass light ---------- */
+let sx=0,sy=0;
+addEventListener('pointermove',e=>{PTR.x=e.clientX/innerWidth*2-1;PTR.y=e.clientY/innerHeight*2-1;wake();
+  const s=slides[idx];if(!s||overview)return;
+  for(const g of s.querySelectorAll('.glass')){const r=g.getBoundingClientRect();g.style.setProperty('--gx',((e.clientX-r.left)/r.width*100)+'%');g.style.setProperty('--gy',((e.clientY-r.top)/r.height*100)+'%')}
+  const t=e.target.closest&&e.target.closest('.tilt');$$('.tilt',s).forEach(el=>{if(el!==t)el.style.transform=''});
+  if(t){const r=t.getBoundingClientRect(),dx=(e.clientX-r.left)/r.width-.5,dy=(e.clientY-r.top)/r.height-.5;t.style.transform=`rotateY(${dx*14}deg) rotateX(${-dy*12}deg) translateZ(20px)`}});
+(function par(){sx+=(PTR.x-sx)*.06;sy+=(PTR.y-sy)*.06;stage.style.setProperty('--mx',sx.toFixed(3));stage.style.setProperty('--my',sy.toFixed(3));requestAnimationFrame(par)})();
+
+/* ---------- HUD ---------- */
+$('#prog').innerHTML=slides.map((s,i)=>`<i data-i="${i}" title="${i+1}"></i>`).join('');
+$('#prog').addEventListener('click',e=>{const i=e.target.dataset.i;if(i!=null){e.stopPropagation();go(+i)}});
+function hud(){$$('#prog i').forEach((el,i)=>{el.classList.toggle('on',i<idx);el.classList.toggle('cur',i===idx)});$('#cnt').textContent=String(idx+1).padStart(2,'0')+' / '+String(N).padStart(2,'0');$('#chap').textContent=slides[idx].dataset.chapter||'';
+  document.documentElement.style.setProperty('--pp',slides[idx].style.getPropertyValue('--pp'));
+  const p=+slides[idx].dataset.p;document.documentElement.style.setProperty('--mote',p<.5?'190,250,245':'255,214,160')}
+let idleT;function wake(){document.body.classList.remove('idle');clearTimeout(idleT);idleT=setTimeout(()=>{if(!editing&&!overview)document.body.classList.add('idle')},2600)}
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2200)}
+
+/* ---------- navigation ---------- */
+const hooks={};let hookStop=null;
+function go(n){n=Math.max(0,Math.min(N-1,n));if(n===idx)return;const prev=slides[idx];stage.classList.toggle('back',n<idx);
+  if(hookStop){hookStop();hookStop=null}
+  if(prev){prev.classList.remove('active');prev.classList.add('leaving');const p=prev;setTimeout(()=>{if(!p.classList.contains('active'))p.classList.remove('leaving')},1300)}
+  const s=slides[n];s.classList.remove('leaving');void s.offsetWidth;s.classList.add('active');idx=n;
+  BG.to(+s.dataset.p,+(s.dataset.calm||0));hud();counters(s);MOTES.kick();
+  const h=s.dataset.hook;if(h&&hooks[h])hookStop=hooks[h](s)||null;
+  try{history.replaceState(null,'','#'+(n+1))}catch(e){}}
+const next=()=>go(idx+1),prev=()=>go(idx-1);
+
+function counters(s){s.querySelectorAll('[data-count]').forEach(el=>{const to=+el.dataset.count,suf=el.dataset.suffix||'',pre=el.dataset.prefix||'';if(RM){el.textContent=pre+to+suf;return}const st=performance.now()+700,dur=2200;
+  (function f(now){const k=Math.min(1,Math.max(0,(now-st)/dur)),e=1-Math.pow(1-k,4);el.textContent=pre+Math.round(to*e)+suf;if(k<1&&s.classList.contains('active'))requestAnimationFrame(f);else el.textContent=pre+to+suf})(performance.now())})}
+
+
+/* ---------- overview ---------- */
+function toggleOverview(on){overview=on??!overview;document.body.classList.toggle('overview',overview);
+  if(overview){stage.classList.add('static');$$('[data-count]').forEach(el=>el.textContent=(el.dataset.prefix||'')+el.dataset.count+(el.dataset.suffix||''));slides.forEach((s,i)=>{const c=i%5,r=Math.floor(i/5);s.style.setProperty('--ox',(110+c*(320+40))+'px');s.style.setProperty('--oy',(150+r*(180+40))+'px');s.classList.toggle('cur',i===idx)});wake()}
+  else{slides.forEach(s=>s.classList.remove('cur'));setTimeout(()=>stage.classList.remove('static'),50);const s=slides[idx];s.classList.remove('active');void s.offsetWidth;s.classList.add('active')}}
+stage.addEventListener('click',e=>{if(overview){const s=e.target.closest('.slide');if(s){const i=slides.indexOf(s);toggleOverview(false);idx===i?0:go(i)}return}
+  if(editing||e.target.closest('a,button,[contenteditable]'))return;(COARSE&&e.clientX<innerWidth*.3?prev:next)()});
+
+
+/* ---------- keys + swipe ---------- */
+addEventListener('keydown',e=>{wake();const k=e.key;
+  if(editing&&document.activeElement&&document.activeElement.isContentEditable){if(k==='Escape')document.activeElement.blur();return}
+  if(['ArrowRight','ArrowDown','PageDown',' ','Enter'].includes(k)){e.preventDefault();if(overview){toggleOverview(false)}else next()}
+  else if(['ArrowLeft','ArrowUp','PageUp','Backspace'].includes(k)){e.preventDefault();if(!overview)prev()}
+  else if(k==='Home')go(0);else if(k==='End')go(N-1);
+  else if(k==='o'||k==='O'||k==='g'||k==='G')toggleOverview();
+  else if(k==='Escape'){if($('#help').classList.contains('show'))$('#help').classList.remove('show');else if(overview)toggleOverview(false)}
+  else if(k==='f'||k==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}
+  else if(k==='?'||k==='/'||k==='h'||k==='H')$('#help').classList.toggle('show')});
+let tx=null;addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});addEventListener('touchend',e=>{if(tx==null)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>60)(dx<0?next:prev)();tx=null});
+$('#help').addEventListener('click',()=>$('#help').classList.remove('show'));
+
+
+
+/* ---------- edit mode (used by editor.js) ---------- */
+function leafs(){return $$('[data-e]')}
+function toggleEdit(){editing=!editing;document.body.classList.toggle('editing',editing);
+  if(editing){stage.classList.add('static');$$('.split').forEach(unsplit);leafs().forEach(el=>el.setAttribute('contenteditable','true'));toast('Editing · click any words')}
+  else{leafs().forEach(el=>el.removeAttribute('contenteditable'));$$('.split').forEach(el=>{el.dataset.src=el.innerHTML;split(el)});stage.classList.remove('static');toast('Preview')}}
+
+/* ---------- touch + small screens ---------- */
+$$('#tbtn button').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();wake();const a=b.dataset.a;
+  if(a==='grid')toggleOverview();else if(a==='fs'){const d=document,el=d.documentElement;(d.fullscreenElement||d.webkitFullscreenElement)?(d.exitFullscreen||d.webkitExitFullscreen).call(d):(el.requestFullscreen||el.webkitRequestFullscreen||(()=>{})).call(el)}}));
+if(!(document.fullscreenEnabled||document.webkitFullscreenEnabled)){const f=$('#tbtn [data-a=fs]');if(f)f.remove()}
+if(COARSE){const h=$('#help tbody');if(h)h.innerHTML='<tr><td>TAP RIGHT</td><td>Next slide</td></tr><tr><td>TAP LEFT</td><td>Back</td></tr><tr><td>SWIPE</td><td>Next or back</td></tr><tr><td>▦</td><td>See every slide</td></tr>'}
+
+/* ---------- deck hooks ---------- */
+
+addEventListener('resize',fit);fit();
+if(/[?&]edit\b/.test(location.search)){const ed=document.createElement('script');ed.src='editor.js?v='+Date.now();document.body.appendChild(ed)}
+const start=Math.max(1,Math.min(N,parseInt(location.hash.slice(1))||1));go(start-1);wake();
+</script>
+</body></html>
